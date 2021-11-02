@@ -1,0 +1,20 @@
+{
+  "name": "bilibili-videoflow",
+  "description": "change bilibili web page to app like",
+  "version": "0.1",
+  "manifest_version": 3,
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "dist/menu.html",
+    "default_icon": "bilibili.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Q",
+        "mac": "MacCtrl+Q"
+      },
+      "description": "refresh"
+    }
+  }
+}
