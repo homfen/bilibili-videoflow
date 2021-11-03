@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Switch } from "antd";
 
 function createItem(wrap, item) {
-  const container = document.createElement("div");
+  const container = document.createElement("a");
+  container.href = item.uri;
+  container.target = "_blank";
+  container.style.display = "block";
   container.style.width = "200px";
   container.style.background = "#ffffff";
   container.style.borderRadius = "10px";
@@ -10,7 +13,7 @@ function createItem(wrap, item) {
   container.style.overflow = "hidden";
 
   const img = document.createElement("img");
-  img.src = item.pic;
+  img.src = item.pic + "@412w_232h_1c";
   img.style.display = "block";
   img.style.width = "100%";
   container.appendChild(img);
@@ -24,20 +27,24 @@ function createItem(wrap, item) {
   title.style.padding = "0 10px";
   title.innerHTML = item.title;
   container.appendChild(title);
-  const owner = document.createElement("div");
+  const owner = document.createElement("a");
   owner.innerHTML = item.owner.name;
+  owner.href = "https://space.bilibili.com/" + item.owner.mid;
+  owner.target = "_blank";
+  owner.style.display = "block";
   owner.style.padding = "0 10px";
   owner.style.color = "#999";
   container.appendChild(owner);
-  wrap.appendChild(container);
+  wrap.insertBefore(container, wrap.firstElementChild);
 }
 
 function getRcmd(check) {
+  window.check = check;
+
   const app = document.querySelector("#app");
   const footer = document.querySelector(".international-footer");
   let flow = document.querySelector("#bilibili-videoflow");
-  let flowInner = document.querySelector("#bilibili-videoflow-inner");
-  if (check) {
+  if (window.check) {
     app.style.display = "none";
     footer.style.display = "none";
     if (!flow) {
@@ -46,8 +53,6 @@ function getRcmd(check) {
       flow.style.width = "440px";
       flow.style.height = "100%";
       flow.style.margin = "auto";
-      flow.style.flexFlow = "row wrap";
-      flow.style.background = "#afafaf";
       flow.style.position = "relative";
       document.body.appendChild(flow);
       const refresh = document.createElement("div");
@@ -70,31 +75,46 @@ function getRcmd(check) {
         getRcmd(true);
       });
       flow.appendChild(refresh);
-      flowInner = document.createElement("div");
+      const flowInner = document.createElement("div");
+      flowInner.id = "bilibili-videoflow-inner";
       flowInner.style.width = "100%";
       flowInner.style.height = "100%";
+      flowInner.style.display = "flex";
+      flowInner.style.flexFlow = "row wrap";
+      flowInner.style.background = "#afafaf";
+      flowInner.style.overflowY = "auto";
+      const empty = document.createElement("div");
+      empty.style.display = "none";
+      flowInner.appendChild(empty);
       flow.appendChild(flowInner);
     }
-    flow.style.display = "flex";
-    fetch(
-      "https://api.bilibili.com/x/web-interface/index/top/rcmd?fresh_type=3",
-      { credentials: "include" }
-    )
-      .then((res) => res.json())
-      .then((res) => {
-        res.data.item.forEach((item) => {
-          createItem(flowInner, item);
-        });
-      });
+    flow.style.display = "block";
   } else {
     app.style.display = "block";
     footer.style.display = "block";
-    flow.style.display = "none";
+    if (flow) {
+      flow.style.display = "none";
+    }
   }
+
+  const flowInner = document.querySelector("#bilibili-videoflow-inner");
+  fetch(
+    "https://api.bilibili.com/x/web-interface/index/top/rcmd?fresh_type=3",
+    { credentials: "include" }
+  )
+    .then((res) => res.json())
+    .then((res) => {
+      console.log("fetch", res.data.item);
+      res.data.item.forEach((item) => {
+        createItem(flowInner, item);
+      });
+    });
 }
 
 const Menu = () => {
   const [checked, setChecked] = useState(false);
+  const checkedRef = useRef();
+  checkedRef.current = checked;
   const onChange = async (check) => {
     setChecked(check);
 
@@ -109,9 +129,10 @@ const Menu = () => {
       args: [check]
     });
   };
+
   return (
     <div>
-      <h2>BiliBili VideoFlow</h2>
+      <h4>BiliBili VideoFlow</h4>
       <Switch checked={checked} onChange={onChange} />
     </div>
   );
