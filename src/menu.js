@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Switch } from "antd";
 
-function createItem(wrap, item) {
+function createItem(wrap, item, cookie, csrf) {
   const container = document.createElement("a");
   container.href = item.uri;
   container.target = "_blank";
@@ -27,14 +27,38 @@ function createItem(wrap, item) {
   title.style.padding = "0 10px";
   title.innerHTML = item.title;
   container.appendChild(title);
+  const footer = document.createElement("div");
+  footer.style.display = "flex";
+  footer.style.justifyContent = "space-between";
+  footer.style.padding = "0 10px";
+  container.appendChild(footer);
   const owner = document.createElement("a");
   owner.innerHTML = item.owner.name;
   owner.href = "https://space.bilibili.com/" + item.owner.mid;
   owner.target = "_blank";
   owner.style.display = "block";
-  owner.style.padding = "0 10px";
   owner.style.color = "#999";
-  container.appendChild(owner);
+  footer.appendChild(owner);
+  const later = document.createElement("div");
+  later.innerHTML = "Later";
+  later.style.color = "#999";
+  later.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const data = new FormData();
+    data.append("aid", item.id);
+    data.append("csrf", csrf);
+    console.log("formData", data, item.id, csrf);
+    fetch("https://api.bilibili.com/x/v2/history/toview/add", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        cookie
+      },
+      body: data
+    });
+  });
+  footer.appendChild(later);
   wrap.insertBefore(container, wrap.firstElementChild);
 }
 
@@ -97,6 +121,11 @@ function getRcmd(check) {
     }
   }
 
+  const cookie = document.cookie;
+  const csrf = cookie
+    .split(";")
+    .map((item) => item.split("="))
+    .find((item) => item[0].trim() === "bili_jct")[1];
   const flowInner = document.querySelector("#bilibili-videoflow-inner");
   fetch(
     "https://api.bilibili.com/x/web-interface/index/top/rcmd?fresh_type=3",
@@ -106,7 +135,7 @@ function getRcmd(check) {
     .then((res) => {
       console.log("fetch", res.data.item);
       res.data.item.forEach((item) => {
-        createItem(flowInner, item);
+        createItem(flowInner, item, cookie, csrf);
       });
     });
 }
