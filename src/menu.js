@@ -137,6 +137,7 @@ function getRcmd(check) {
       res.data.item.forEach((item) => {
         createItem(flowInner, item, cookie, csrf);
       });
+      flowInner.scrollTop = 0;
     });
 }
 
